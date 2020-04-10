@@ -146,7 +146,7 @@ public class MessageFlowReporterThread extends Thread {
 
             switch (event.getEventType()) {
                 case STATISTICS_CLOSE_EVENT:
-
+                    log.debug("STATISTICS_CLOSE_EVENT");
                     StatisticDataUnit dataUnit = (StatisticDataUnit) event.getDataUnit();
 
 
@@ -164,16 +164,21 @@ public class MessageFlowReporterThread extends Thread {
                     }
                     statisticsLog.decrementOpenTimes();
                     statisticsLog.setEndTime(dataUnit.getTime());
+                    log.debug("Inside MessageFlowReporterThread, \t componentName: " + statisticsLog.getComponentName() + "\t" + "startTime: "
+                            + statisticsLog.getStartTime() + "\t" + "endTime: " + statisticsLog.getEndTime() + "\t"
+                            + "duration: " + (statisticsLog.getEndTime() - statisticsLog.getStartTime()));
                     statisticsLog.setAfterPayload(dataUnit.getPayload());
                     updateParents(messageFlowLogs, statisticsLog.getParentIndex(), dataUnit.getTime());
                     break;
                 case CALLBACK_COMPLETION_EVENT:
+                    log.debug("CALLBACK_COMPLETION_EVENT");
                     CallbackDataUnit callbackDataUnit = (CallbackDataUnit) event.getDataUnit();
                     if (!callbackDataUnit.isOutOnlyFlow()) {
                         updateParents(messageFlowLogs, callbackDataUnit.getCurrentIndex(), callbackDataUnit.getTime());
                     }
                     break;
                 case CALLBACK_RECEIVED_EVENT:
+                    log.debug("CALLBACK_RECEIVED_EVENT");
                     CallbackDataUnit callbackReceivedDataUnit = (CallbackDataUnit) event.getDataUnit();
                     if (!callbackReceivedDataUnit.isOutOnlyFlow()) {
                         updateParents(messageFlowLogs, callbackReceivedDataUnit.getCurrentIndex(), callbackReceivedDataUnit.getTime());
@@ -182,10 +187,12 @@ public class MessageFlowReporterThread extends Thread {
                 case ENDFLOW_EVENT:
                     break;
                 case FAULT_EVENT:
+                    log.debug("FAULT_EVENT");
                     BasicStatisticDataUnit basicDataUnit = event.getDataUnit();
                     addFaultsToParents(messageFlowLogs, basicDataUnit.getCurrentIndex());
                     break;
                 case PARENT_REOPEN_EVENT:
+                    log.debug("PARENT_REOPEN_EVENT");
                     BasicStatisticDataUnit parentReopenDataUnit = event.getDataUnit();
                     openFlowContinuableMediators(messageFlowLogs, parentReopenDataUnit.getCurrentIndex());
                     break;
@@ -230,11 +237,12 @@ public class MessageFlowReporterThread extends Thread {
     void updateParents(List<StatisticsLog> messageFlowLogs, int index, long endTime) {
         while (index > -1) {
             StatisticsLog dataUnit = messageFlowLogs.get(index);
-
             if (dataUnit.getEndTime() == 0 || dataUnit.getEndTime() < endTime) {
                 dataUnit.setEndTime(endTime);
             }
             index = dataUnit.getParentIndex();
+            log.debug("----- Inside updateParents method ----- \n componentName: " + dataUnit.getComponentName() + "\t" + "startTime: " + dataUnit.getStartTime()
+                    + "\t" + "endTime: " + dataUnit.getEndTime() + "\t" + "duration: " + (dataUnit.getEndTime() - dataUnit.getStartTime()));
         }
     }
 
